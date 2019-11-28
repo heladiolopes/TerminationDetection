@@ -49,6 +49,12 @@
 	- se q está quiet e t < Tq,
 		- printa "rejeita WAVE<p,t>, clock incompatível"
 	- se q está quiet e t >= Tq,
-		- printa "aceita WAVE<p,t>"
-		- copia WAVE<p,t> e faz assinaturas[q] = True
-		- faz broadcast da WAVE<p,t>
+		- verifico se já assinei:
+			- sim, e sou o iniciador:
+				- checo se todos assinaram
+			- sim e não sou o iniciador:
+				- printa "rejeita WAVE<p,t>, já assinei"
+			- não:
+				- printa "aceita WAVE<p,t>"
+				- copia WAVE<p,t> e faz assinaturas[q] = True
+				- faz broadcast da WAVE<p,t>
