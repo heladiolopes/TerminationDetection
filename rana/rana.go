@@ -25,7 +25,7 @@ type Rana struct {
 	// logicalClock: Lamport logical clock
 	currentState   *util.ProtectedString
 	logicalClock   int
-
+	startActive		 bool
 	// Goroutine communication channels
 	waveTick    <-chan time.Time		// ?
 	terminationTick <-chan time.Time	// Detect termination of a process
@@ -35,7 +35,7 @@ type Rana struct {
 }
 
 // NewRana create a new rana object and return a pointer to it.
-func NewRana(peers map[int]string, me int) *Rana {
+func NewRana(peers map[int]string, me int, activeStart bool) *Rana {
 	var err error
 
 	// 0 is reserved to represent undefined vote/leader
@@ -63,6 +63,11 @@ func NewRana(peers map[int]string, me int) *Rana {
 	if err != nil {
 		panic(err)
 	}
+	if activeStart {
+		rana.currentState.Set(active)
+	} else {
+		rana.currentState.Set(quiet)
+	}
 
 	go rana.loop()
 
@@ -82,8 +87,7 @@ func (rana *Rana) loop() {
 		panic(err)
 	}
 
-    rana.currentState.Set(quiet)
-    // TODO: lembrar de colocar parâmetro
+  // TODO: lembrar de colocar parâmetro
 	// para usuário decidir se esta ativo
 
 	for {
