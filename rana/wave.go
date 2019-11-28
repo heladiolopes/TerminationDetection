@@ -13,10 +13,10 @@ type WaveArgs struct {
 }
 
 
-// AppendEntry is called by other instances of Raft. It'll write the args received
+// AppendEntry is called by other instances of Rana. It'll write the args received
 // in the appendEntryChan.
 func (rpc *RPC) Wave(args *WaveArgs) error {
-	rpc.raft.appendEntryChan <- args
+	rpc.rana.appendEntryChan <- args
     Signature = make(bool, len(rpc.rana.peers))
 
 	return nil
@@ -27,15 +27,15 @@ func (rana *Rana) broadcastWave() {
     // TODO: Enviar wave para todos
 
     // args := &AppendEntryArgs{
-	// 	Term:     raft.currentTerm,
-	// 	LeaderID: raft.me,
+	// 	Term:     rana.currentTerm,
+	// 	LeaderID: rana.me,
 	// }
     //
-	// for peerIndex := range raft.peers {
-	// 	if peerIndex != raft.me {
+	// for peerIndex := range rana.peers {
+	// 	if peerIndex != rana.me {
 	// 		go func(peer int) {
 	// 			reply := &AppendEntryReply{}
-	// 			ok := raft.sendAppendEntry(peer, args, reply)
+	// 			ok := rana.sendAppendEntry(peer, args, reply)
 	// 			if ok {
 	// 				reply.peerIndex = peer
 	// 				replyChan <- reply
@@ -46,8 +46,8 @@ func (rana *Rana) broadcastWave() {
 }
 
 // sendAppendEntry will send AppendEntry to a peer
-func (raft *Raft) sendWave(peerIndex int, args *WaveArgs) bool {
-	err := raft.CallHost(peerIndex, "Wave", args)
+func (rana *Rana) sendWave(peerIndex int, args *WaveArgs) bool {
+	err := rana.CallHost(peerIndex, "Wave", args)
 	if err != nil {
 		return false
 	}

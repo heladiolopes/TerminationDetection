@@ -14,7 +14,7 @@ func (rana *Rana) CallHost(index int, method string, args interface{}) error {
 		client *rpc.Client
 	)
 
-	client, err = rpc.Dial("tcp", raft.peers[index])
+	client, err = rpc.Dial("tcp", rana.peers[index])
 	if err != nil {
 		return err
 	}

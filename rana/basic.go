@@ -8,7 +8,7 @@ type BasicArgs struct {
 
 }
 
-// RequestVote is called by other instances of Raft. It'll write the args received
+// RequestVote is called by other instances of Rana. It'll write the args received
 // in the requestVoteChan.
 func (rpc *RPC) Basic(args *BasicArgs) error {
 	rpc.rana.basicChan <- args
@@ -20,15 +20,15 @@ func (rana *Rana) broadcastBasic() {
     // TODO: definir lógica para envio de mensagens basic
 
     // args := &RequestVoteArgs{
-	// 	CandidateID: raft.me,
-	// 	Term:        raft.currentTerm,
+	// 	CandidateID: rana.me,
+	// 	Term:        rana.currentTerm,
 	// }
     //
-	// for peerIndex := range raft.peers {
-	// 	if peerIndex != raft.me { // exclude self
+	// for peerIndex := range rana.peers {
+	// 	if peerIndex != rana.me { // exclude self
 	// 		go func(peer int) {
 	// 			reply := &RequestVoteReply{}
-	// 			ok := raft.sendRequestVote(peer, args, reply)
+	// 			ok := rana.sendRequestVote(peer, args, reply)
 	// 			if ok {
 	// 				reply.peerIndex = peer
 	// 				replyChan <- reply
@@ -39,8 +39,8 @@ func (rana *Rana) broadcastBasic() {
 }
 
 // sendRequestVote will send RequestVote to a peer
-func (raft *Raft) sendRequestVote(peerIndex int, args *BasicArgs) bool {
-	err := raft.CallHost(peerIndex, "Basic", args)
+func (rana *Rana) sendBasic(peerIndex int, args *BasicArgs) bool {
+	err := rana.CallHost(peerIndex, "Basic", args)
 	if err != nil {
 		return false
 	}

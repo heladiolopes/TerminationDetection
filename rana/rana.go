@@ -91,7 +91,7 @@ func (rana *Rana) loop() {
 	// para usuário decidir se esta ativo
 
 	for {
-		switch raft.currentState.Get() {
+		switch rana.currentState.Get() {
         case active:
             rana.activeSelect()
         case passive:
@@ -107,7 +107,7 @@ func (rana *Rana) activeSelect() {
 	rana.resetTerminationTimeout()
 	for {
 		select {
-		case <-raft.TerminationTick:
+		case <-rana.TerminationTick:
 			// ALUNO
 		case wave := <-rana.waveChan:
 			// ALUNO
@@ -141,7 +141,7 @@ func (rana *Rana) quietSelect() {
 
 	for {
 		select {
-		case <-raft.waveTick:
+		case <-rana.waveTick:
 			// ALUNO
 		case wave := <-rana.waveChan:
 			// ALUNO
