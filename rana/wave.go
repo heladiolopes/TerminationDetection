@@ -1,5 +1,10 @@
 package rana
 
+import (
+	"log"
+	// "os"
+	)
+
 // AppendEntryArgs is invoked by leader to replicate log entries; also used as
 // heartbeat.
 // Term  	- leader’s term
@@ -9,20 +14,14 @@ type WaveArgs struct {
     Initiator   int
 
     // TODO: descobrir se vai funcionar na hora de testar
-    Signature  []bool
+    Signature  [5]bool
 }
 
 
 // AppendEntry is called by other instances of Rana. It'll write the args received
 // in the appendEntryChan.
 func (rpc *RPC) Wave(args *WaveArgs, reply *WaveArgs) error {
-    args.Signature = make([]bool, len(rpc.rana.peers) + 1)
-
-	// for i := 1; i <= len(rpc.rana.peers); i++ {
-	// 	arg.Signature[i] = false
-	// }
-	//
-	// arg.Signature[args.Initiator] = true
+    // args.Signature = make([]bool, len(rpc.rana.peers) + 1)
 	rpc.rana.waveChan <- args
 	return nil
 }
@@ -30,7 +29,7 @@ func (rpc *RPC) Wave(args *WaveArgs, reply *WaveArgs) error {
 // broadcastAppendEntries will send AppendEntry to all peers
 func (rana *Rana) broadcastWave() {
 
-	signAux := make([]bool, len(rana.peers) + 1)
+	var signAux [5]bool
 	for i := 1; i <= len(rana.peers); i++ {
 		signAux[i] = false
 	}
@@ -43,6 +42,7 @@ func (rana *Rana) broadcastWave() {
 		Signature: signAux,
 	}
 
+	log.Println("Sending:", args)
 	for peerIndex := range rana.peers {
 		if peerIndex != rana.me {
 			go func(peer int) {

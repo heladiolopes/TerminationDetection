@@ -2,6 +2,7 @@ package rana
 
 import (
 	"math/rand"
+	"log"
 )
 
 // RequestVoteArgs is the struct that hold data passed to
@@ -34,6 +35,8 @@ func (rana *Rana) broadcastBasic() {
 				if decision < 0.4 {
 					go func(peer int) {
 						rana.sendBasic(peer, args)
+						rana.ackToWait++
+						log.Printf("[ACTIVE] Sending basic to %v.", peer)
 					}(peerIndex)
 				}
 			}
