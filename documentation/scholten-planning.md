@@ -26,23 +26,23 @@
 		- se está passive:
 			- fica active
 			- guarda o seu pai
-			- responde ack(p)
-			- escolhe um número aleatório de tempo
-			- printa "Estarei ativo por x tempo"
-			- dorme por x tempo
-			- aleatoriamente escolhe se vai continuar a atividade
-			- Se sim,
-				- Escolhe um número aleatório n de processos para os quais vai mandar uma mensagem básica,
-				- Para cada um dos n processos:
-					- Manda a mensagem
-					- p adiciona q a seus filhos na árvore
-				- Fica passive
-				- Checa se ele ainda tem filhos
-				- se p não tiver mais filhos
-					- se p não tem pai, declara terminação
-					- se p tem pai, p manda um control para seu pai
-			- Se não
-				- Fica quiet
+
+		- escolhe um número aleatório de tempo
+		- printa "Estarei ativo por x tempo"
+		- dorme por x tempo
+		- aleatoriamente escolhe se vai continuar a atividade
+		- Se sim,
+			- Escolhe um número aleatório n de processos para os quais vai mandar uma mensagem básica,
+			- Para cada um dos n processos:
+				- Manda a mensagem
+				- p adiciona q a seus filhos na árvore
+			- Fica passive
+			- Checa se ele ainda tem filhos
+			- se p não tiver mais filhos
+				- se p não tem pai, declara terminação
+				- se p tem pai, p manda um control para seu pai
+		- Se não
+			- Fica quiet
 
 	- *Quando p ficar inativo*:
 		- espera um determinado timeout antes de tentar detectar término
