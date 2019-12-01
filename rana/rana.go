@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 	"time"
+	"math"
 )
 
 // Rana is the struct that hold all information that is used by this instance
@@ -27,7 +28,7 @@ type Rana struct {
 	logicalClock   int
 	startActive		 bool
 	// Goroutine communication channels
-	waveTick    <-chan time.Time		// ?
+
 	terminationTick <-chan time.Time	// Detect termination of a process
     waveChan    chan *WaveArgs
     basicChan   chan *BasicArgs
@@ -105,16 +106,42 @@ func (rana *Rana) loop() {
 func (rana *Rana) activeSelect() {
 	log.Println("[ACTIVE] Run Logic.")
 	rana.resetTerminationTimeout()
+
+	rana.broadcastBasic()
+
 	for {
 		select {
 		case <-rana.TerminationTick:
 			// ALUNO
+			if rana.ackToWait == 0 {
+				rana.currentState.Set(quiet)
+			} else {
+				rana.currentState.Set(passive)
+			}
+
+			log.Println("[ACTIVE] Changing to", rana.currentState)
+			break
 		case wave := <-rana.waveChan:
 			// ALUNO
+			log.Println("[ACTIVE] Descarting wave from", wave.Initiator)
 		case basic := <-rana.basicChan:
 			// ALUNO
+
+			args := &AckArg{
+				Clock: rana.logicalClock,
+				Sender: rana.me
+			}
+
+			rana.sendAck(basic.Sender, args)
+
+			log.Println("[ACTIVE] Reseting active state")
+			break
+
 		case ack := <-rana.ackChan:
 			// ALUNO
+			rana.ackToWait--
+			rana.logicalClock = math.Max(rana.logicalClock, ack.Clock + 1)
+			log.Println("[ACTIVE] Receiving ack from", ack.Sender)
 		}
 	}
 }
@@ -125,10 +152,30 @@ func (rana *Rana) passiveSelect() {
 		select {
 		case wave := <-rana.waveChan:
 			// ALUNO
+			log.Println("[PASSIVE] Descarting wave from", wave.Initiator)
 		case basic := <-rana.basicChan:
 			// ALUNO
+			log.Println("[PASSIVE] Receving basic, activating again.")
+
+			args := &AckArg{
+				Clock: rana.logicalClock,
+				Sender: rana.me
+			}
+
+			rana.sendAck(basic.Sender, args)
+
+			rana.currentState.Set(active)
+			break
+
 		case ack := <-rana.ackChan:
 			// ALUNO
+			rana.ackToWait--
+			rana.logicalClock = math.Max(rana.logicalClock, ack.Clock + 1)
+			log.Println("[PASSIVE] Receiving ack from", ack.Sender)
+			if rana.ackToWait == 0 {
+				rana.currentState.Set(quiet)
+				break
+			}
 		}
 	}
 }
@@ -137,15 +184,60 @@ func (rana *Rana) quietSelect() {
 	log.Println("[QUIET] Run Logic.")
 	rana.resetWaveTimeout()
 
-	// TODO: enviar wave
+	rana.broadcastWave()
 
 	for {
 		select {
-		case <-rana.waveTick:
-			// ALUNO
 		case wave := <-rana.waveChan:
 			// ALUNO
+
+			if wave.Clock < rana.logicalClock {
+				log.Println("[QUIET] Rejecting wave from", wave.Initiator, "because clock smaller them mine.")
+			} else {
+				rana.logicalClock = wave.Clock
+				sign := wave.Signature[rana.me]
+				if sign {
+					if wave.Initiator == rana.me {
+						everybody := true
+						for i := 1; i <= len(rpc.rana.peers); i++ {
+							if wave.Signature[i] == false {
+								everybody = false
+								break
+							}
+						}
+						if everybody {
+							log.Println("[QUIET] Termination deteced.")
+							// avisar aos outros processos
+						}
+					}
+				} else {
+					log.Println("[QUIET] Acepting wave.")
+					wave.Signature[rana.me] = true
+
+					for peerIndex in range rana.peers {
+						if peerIndex != rana.me {
+							go func(peer int) {
+								rana.sendWave(peer, wave)
+							}(peerIndex)
+						}
+					}
+
+				}
+			}
+
 		case basic := <-rana.basicChan:
 			// ALUNO
+			log.Println("[QUIET] Receving basic, activating again.")
+
+			args := &AckArg{
+				Clock: rana.logicalClock,
+				Sender: rana.me
+			}
+
+			rana.sendAck(basic.Sender, args)
+
+			rana.currentState.Set(active)
+			break
+
 	}
 }
