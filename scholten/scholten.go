@@ -30,7 +30,7 @@ type Scholten struct {
 	// Goroutine communication channels
 	basicChan   chan *BasicArgs
 	controlChan chan *ControlArgs
-	finishChan  chan *FinishArgs
+	terminationChan  chan *TerminationArgs
 }
 
 // NewScholten create a new scholten object and return a pointer to it.
@@ -57,7 +57,7 @@ func NewScholten(peers map[int]string, me int, isroot bool) *Scholten {
 
 		basicChan:   make(chan *BasicArgs, 10*len(peers)),
 		controlChan: make(chan *ControlArgs, 10*len(peers)),
-    finishChan:  make(chan *FinishArgs, 10*len(peers)),
+    terminationChan:  make(chan *TerminationArgs, 10*len(peers)),
 	}
 
 	scholten.serv, err = newServer(scholten, peers[me])
@@ -117,9 +117,9 @@ func (scholten *Scholten) loop() {
 				scholten.leaveTree()
 			}
 
-		case finish := <- scholten.finishChan:
+		case termination := <- scholten.terminationChan:
 			// ALUNO
-			log.Println("Received termination message from", finish.Sender,"!")
+			log.Println("Received termination message from", termination.Sender,"!")
 			scholten.done <- 0
 		}
 	}

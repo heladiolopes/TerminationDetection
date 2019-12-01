@@ -22,7 +22,7 @@ func (scholten *Scholten) leaveTree(){
     if scholten.root {
   		log.Println("[PASSIVE] Termination detected!")
   		log.Println("[PASSIVE] Sending termination messages to all processes.")
-  		scholten.broadcastFinish()
+  		scholten.broadcastTermination()
       scholten.done <- 0
   	} else {
   		log.Println("[PASSIVE] Tree leaving condition met!")
