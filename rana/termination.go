@@ -1,24 +1,21 @@
 package rana
 
-// AppendEntryArgs is invoked by leader to replicate log entries; also used as
-// heartbeat.
-// Term  	- leader’s term
-// leaderId - so follower can redirect clients
+// TerminationArgs is called by the initiator to communicate termination
+// Initiator	- id from termination detection initiator
 type TerminationArgs struct {
     Initiator   int
 
 }
 
-
-// AppendEntry is called by other instances of Rana. It'll write the args received
-// in the appendEntryChan.
+// Termination is called by other instances of Rana. It'll write the args received
+// in the termChan. Requires response arguments, but not used.
 func (rpc *RPC) Termination(args *TerminationArgs, reply *TerminationArgs) error {
     // args.Signature = make([]bool, len(rpc.rana.peers) + 1)
 	rpc.rana.termChan <- args
 	return nil
 }
 
-// broadcastAppendEntries will send AppendEntry to all peers
+// broadcastTermination will send Termination to all peers, myself included
 func (rana *Rana) broadcastTermination() {
 
 	args := &TerminationArgs{
@@ -34,7 +31,7 @@ func (rana *Rana) broadcastTermination() {
 	}
 }
 
-// sendAppendEntry will send AppendEntry to a peer
+// sendTermination will send Termination to a specifiv peer
 func (rana *Rana) sendTermination(peerIndex int, args *TerminationArgs) bool {
 	reply := &TerminationArgs{}
 	err := rana.CallHost(peerIndex, "Termination", args, reply)
