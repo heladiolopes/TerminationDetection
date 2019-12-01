@@ -1,11 +1,11 @@
 package scholten
 
 import (
-	"errors"
 	"TerminationDetection/util"
+	"errors"
 	"log"
 	"sync"
-	"time"
+	"math/rand"
 )
 
 // Scholten is the struct that hold all information that is used by this instance
@@ -19,18 +19,18 @@ type Scholten struct {
 	peers map[int]string
 	me    int
 
-	ccp 		int
-	children	[]int
-	dad			int
-	root 		bool
+	ccp      int
+	children []int
+	dad      int
+	root     bool
 
+	works 	 int
 	// Persistent state on all servers:
-	// logicalClock: Lamport logical clock
-	currentState   *util.ProtectedString
+	currentState *util.ProtectedString
 
 	// Goroutine communication channels
-    basicChan   chan *BasicArgs
-    controlChan	chan *ControlArgs
+	basicChan   chan *BasicArgs
+	controlChan chan *ControlArgs
 }
 
 // NewScholten create a new scholten object and return a pointer to it.
@@ -48,15 +48,16 @@ func NewScholten(peers map[int]string, me int, isroot bool) *Scholten {
 		peers: peers,
 		me:    me,
 
-		ccp: 0,
+		ccp:      0,
 		children: make(int, 0),
-		dad: -1,
-		root: isroot,
+		dad:      -1,
+		root:     isroot,
 
 		currentState: util.NewProtectedString(),
 
-		basicChan: make(chan *BasicArgs, 10*len(peers)),
+		basicChan:   make(chan *BasicArgs, 10*len(peers)),
 		controlChan: make(chan *ControlArgs, 10*len(peers)),
+    finishChan:  make(chan *FinishArgs, 10*len(peers))
 	}
 
 	scholten.serv, err = newServer(scholten, peers[me])
@@ -88,37 +89,27 @@ func (scholten *Scholten) loop() {
 		panic(err)
 	}
 
-	for {
-		switch scholten.currentState.Get() {
-        case active:
-            scholten.activeSelect()
-        case passive:
-            scholten.passiveSelect()
-		}
-	}
-}
 
-func (scholten *Scholten) activeSelect() {
-	log.Println("[ACTIVE] Run Logic.")
-	scholten.resetTerminationTimeout()
-	for {
-		select {
-		case basic := <-scholten.basicChan:
-			// ALUNO
-		case control := <-scholten.controlChan:
-			// ALUNO
+	select {
+	case basic := <-scholten.basicChan:
+		// ALUNO
+		if scholten.root || scholten.dad != -1 {
+			scholten.sendControl(basic.Sender)
 		}
-	}
-}
 
-func (scholten *Scholten) passiveSelect() {
-	log.Println("[PASSIVE] Run Logic.")
-	for {
-		select {
-		case basic := <-scholten.basicChan:
-			// ALUNO
-		case control := <-scholten.controlChan:
-			// ALUNO
+		scholten.doWork()
+
+	case control := <-scholten.controlChan:
+		// ALUNO
+		for i, child := range scholten.children {
+			if child == control.Sender {
+				scholten.removeChild(child)
+				break
+			}
+		}
+
+		if scholten.ccp == 0 && scholten.currentState.Get() == passive {
+			scholten.leaveTree()
 		}
 	}
 }

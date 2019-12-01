@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+const (
+	minSleepTime := 10,
+	maxSleepTime := 1000
+)
+
 // BroadcastInterval << ElectionTimeout << MTBF
 // MTBF = Mean Time Between Failures
 

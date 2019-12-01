@@ -14,7 +14,7 @@ func (rpc *RPC) Basic(args *BasicArgs) error {
 }
 
 // broadcastRequestVote will send RequestVote to all peers
-func (scholten *Scholten) broadcastBasic() {
+// func (scholten *Scholten) broadcastBasic() {
     // TODO: definir lógica para envio de mensagens basic
 
     // args := &RequestVoteArgs{
@@ -34,10 +34,13 @@ func (scholten *Scholten) broadcastBasic() {
 	// 		}(peerIndex)
 	// 	}
 	// }
-}
+// }
 
 // sendRequestVote will send RequestVote to a peer
-func (scholten *Scholten) sendBasic(peerIndex int, args *BasicArgs) bool {
+func (scholten *Scholten) sendBasic(peerIndex int) bool {
+	args := &BasicArgs{
+		Sender: scholten.me
+	}
 	err := scholten.CallHost(peerIndex, "Basic", args)
 	if err != nil {
 		return false

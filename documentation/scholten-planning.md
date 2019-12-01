@@ -16,6 +16,9 @@
 	- *Mensagem control*:
 		- Remetente
 
+	- *Mensagem finish*:
+	 	- Remetente
+
 	- *Ao p receber uma mensagem básica*:
 		- se está active:
 			- responde com um control		
@@ -47,6 +50,6 @@
 
 	- *Quando p recebe um control de q*
 		- p remove q de seus filhos na árvore
-		- se p não tiver mais filhos
+		- se p não tiver mais filhos e estiver passivo:
 			- se p não tem pai, declara terminação
 			- se p tem pai, p manda um leave para seu pai
