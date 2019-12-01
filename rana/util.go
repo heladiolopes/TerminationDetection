@@ -19,5 +19,5 @@ func (rana *Rana) terminationTimeout() time.Duration {
 // }
 
 func (rana *Rana) resetTerminationTimeout() {
-    rana.terminationTick = time.NewTimer(rana.terminationTimeout()).c
+    rana.terminationTick = time.NewTimer(rana.terminationTimeout()).C
 }
