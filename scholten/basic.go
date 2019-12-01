@@ -8,7 +8,7 @@ type BasicArgs struct {
 
 // RequestVote is called by other instances of Scholten. It'll write the args received
 // in the requestVoteChan.
-func (rpc *RPC) Basic(args *BasicArgs) error {
+func (rpc *RPC) Basic(args *BasicArgs, reply *Reply) error {
 	rpc.scholten.basicChan <- args
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"TerminationDetection/util"
 	"errors"
 	"sync"
+	"log"
 )
 
 // Scholten is the struct that hold all information that is used by this instance
@@ -12,7 +13,7 @@ type Scholten struct {
 	sync.Mutex
 
 	serv *server
-	done chan struct{}
+	done chan int
 
 	peers map[int]string
 	me    int
@@ -42,7 +43,7 @@ func NewScholten(peers map[int]string, me int, isroot bool) *Scholten {
 	}
 
 	scholten := &Scholten{
-		done: make(chan struct{}),
+		done: make(chan int),
 
 		peers: peers,
 		me:    me,
@@ -76,7 +77,7 @@ func NewScholten(peers map[int]string, me int, isroot bool) *Scholten {
 }
 
 // Done returns a channel that will be used when the instance is done.
-func (scholten *Scholten) Done() <-chan struct{} {
+func (scholten *Scholten) Done() <-chan int {
 	return scholten.done
 }
 
@@ -87,28 +88,39 @@ func (scholten *Scholten) loop() {
 	if err != nil {
 		panic(err)
 	}
+	if scholten.root {
+		go scholten.doWork()
+	}
 
-
-	select {
-	case basic := <-scholten.basicChan:
-		// ALUNO
-		if scholten.root || scholten.dad != -1 {
-			scholten.sendControl(basic.Sender)
-		}
-
-		scholten.doWork()
-
-	case control := <-scholten.controlChan:
-		// ALUNO
-		for i, child := range scholten.children {
-			if child == control.Sender {
-				scholten.removeChild(child, i)
-				break
+	for {
+		select {
+		case basic := <-scholten.basicChan:
+			// ALUNO
+			if scholten.root || scholten.dad != -1 {
+				scholten.sendControl(basic.Sender)
+			} else {
+				scholten.dad = basic.Sender
 			}
-		}
 
-		if scholten.ccp == 0 && scholten.currentState.Get() == passive {
-			scholten.leaveTree()
+			go scholten.doWork()
+
+		case control := <-scholten.controlChan:
+			// ALUNO
+			for i, child := range scholten.children {
+				if child == control.Sender {
+					scholten.removeChild(child, i)
+					break
+				}
+			}
+
+			if scholten.ccp == 0 && scholten.currentState.Get() == passive {
+				scholten.leaveTree()
+			}
+
+		case finish := <- scholten.finishChan:
+			// ALUNO
+			log.Println("Received termination message from", finish.Sender,"!")
+			scholten.done <- 0
 		}
 	}
 }

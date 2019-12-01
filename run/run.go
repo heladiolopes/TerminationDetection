@@ -2,7 +2,7 @@ package main
 
 import (
 	"TerminationDetection/rana"
-	// "TerminationDetection/scholten"
+	"TerminationDetection/scholten"
 	"flag"
 	"hash/fnv"
 	"log"
@@ -45,9 +45,9 @@ func main() {
 	if *algorithm == "rana" {
 		rana := rana.NewRana(peers, *instanceID, *initial)
 		<-rana.Done()
-	// } else if *algorithm == "scholten" {
-	// 	scholten := scholten.newScholten(peers, *instanceID)
-	// 	<-scholten.Done()
+	 } else if *algorithm == "scholten" {
+	 	scholten := scholten.NewScholten(peers, *instanceID, *initial)
+	 	<-scholten.Done()
 	} else {
 		log.Fatalf("[MAIN] Invalid algorithm")
 	}

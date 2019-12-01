@@ -18,12 +18,12 @@ type FinishArgs struct {
 
 // AppendEntry is called by other instances of Scholten. It'll write the args received
 // in the appendEntryChan.
-func (rpc *RPC) Control(args *ControlArgs) error {
+func (rpc *RPC) Control(args *ControlArgs, reply *Reply) error {
 	rpc.scholten.controlChan <- args
 	return nil
 }
 
-func (rpc *RPC) Finish(args *FinishArgs) error {
+func (rpc *RPC) Finish(args *FinishArgs, reply *Reply) error {
 	rpc.scholten.finishChan <- args
 	return nil
 }
