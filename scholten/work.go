@@ -10,13 +10,12 @@ func (scholten *Scholten) doWork(){
   scholten.currentState.Set(active)
 
   scholten.works += 1
-  sleepTime = rand.Intn(maxSleepTime - minSleepTime) + minSleepTime
+  sleepTime := rand.Intn(maxSleepTime - minSleepTime) + minSleepTime
   log.Println("[ACTIVE] Going to work for ", sleepTime, "milliseconds")
-  time.Sleep(sleepTime * time.Millisecond)
+  time.Sleep(time.Duration(sleepTime)*time.Millisecond)
 
   ToWakeUp := make([]int, len(scholten.peers))
   order := rand.Perm(len(scholten.peers))
-  dice := 1
   count := 0
   for dice := 1.0; dice > 0.5 || count < len(scholten.peers); dice = rand.Float64() {
     ToWakeUp = append(ToWakeUp, order[count])

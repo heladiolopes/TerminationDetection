@@ -3,9 +3,7 @@ package scholten
 import (
 	"TerminationDetection/util"
 	"errors"
-	"log"
 	"sync"
-	"math/rand"
 )
 
 // Scholten is the struct that hold all information that is used by this instance
@@ -31,6 +29,7 @@ type Scholten struct {
 	// Goroutine communication channels
 	basicChan   chan *BasicArgs
 	controlChan chan *ControlArgs
+	finishChan  chan *FinishArgs
 }
 
 // NewScholten create a new scholten object and return a pointer to it.
@@ -49,7 +48,7 @@ func NewScholten(peers map[int]string, me int, isroot bool) *Scholten {
 		me:    me,
 
 		ccp:      0,
-		children: make(int, 0),
+		children: make([]int, 10),
 		dad:      -1,
 		root:     isroot,
 
@@ -57,7 +56,7 @@ func NewScholten(peers map[int]string, me int, isroot bool) *Scholten {
 
 		basicChan:   make(chan *BasicArgs, 10*len(peers)),
 		controlChan: make(chan *ControlArgs, 10*len(peers)),
-    finishChan:  make(chan *FinishArgs, 10*len(peers))
+    finishChan:  make(chan *FinishArgs, 10*len(peers)),
 	}
 
 	scholten.serv, err = newServer(scholten, peers[me])
@@ -103,7 +102,7 @@ func (scholten *Scholten) loop() {
 		// ALUNO
 		for i, child := range scholten.children {
 			if child == control.Sender {
-				scholten.removeChild(child)
+				scholten.removeChild(child, i)
 				break
 			}
 		}

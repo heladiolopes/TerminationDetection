@@ -39,7 +39,7 @@ func (rpc *RPC) Basic(args *BasicArgs) error {
 // sendRequestVote will send RequestVote to a peer
 func (scholten *Scholten) sendBasic(peerIndex int) bool {
 	args := &BasicArgs{
-		Sender: scholten.me
+		Sender: scholten.me,
 	}
 	err := scholten.CallHost(peerIndex, "Basic", args)
 	if err != nil {

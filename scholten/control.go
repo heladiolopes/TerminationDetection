@@ -1,5 +1,9 @@
 package scholten
 
+import (
+	"log"
+)
+
 // AppendEntryArgs is invoked by leader to replicate log entries; also used as
 // heartbeat.
 // Term  	- leader’s term
@@ -40,7 +44,7 @@ func (scholten *Scholten) broadcastFinish() {
 // sendAppendEntry will send AppendEntry to a peer
 func (scholten *Scholten) sendControl(peerIndex int) bool {
 	args := &ControlArgs{
-		Sender: scholten.me
+		Sender: scholten.me,
 	}
 	err := scholten.CallHost(peerIndex, "Control", args)
 	if err != nil {
@@ -51,7 +55,7 @@ func (scholten *Scholten) sendControl(peerIndex int) bool {
 
 func (scholten *Scholten) sendFinish(peerIndex int) bool {
 	args := &FinishArgs{
-		Sender: scholten.me
+		Sender: scholten.me,
 	}
 	err := scholten.CallHost(peerIndex, "Finish", args)
 	if err != nil {
