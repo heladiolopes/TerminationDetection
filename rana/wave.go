@@ -1,36 +1,30 @@
 package rana
 
-// AppendEntryArgs is invoked by leader to replicate log entries; also used as
-// heartbeat.
-// Term  	- leader’s term
-// leaderId - so follower can redirect clients
+// WaveArgs is invoked by initiator to detect the termination,
+// the others processes pass along the wave
+// Clock  		- initiator timestap
+// Initiator	- id from termination detection initiator
+// Signature	- bool array with signature of processes that have already gone
+	// through the wave
 type WaveArgs struct {
 	Clock       int
     Initiator   int
 
-    // TODO: descobrir se vai funcionar na hora de testar
-    Signature  []bool
+    Signature  [5]bool
 }
 
 
-// AppendEntry is called by other instances of Rana. It'll write the args received
-// in the appendEntryChan.
+// Wave is called by other instances of Rana. It'll write the args received
+// in the waveChan. Requires response arguments, but not used.
 func (rpc *RPC) Wave(args *WaveArgs, reply *WaveArgs) error {
-    args.Signature = make([]bool, len(rpc.rana.peers) + 1)
-
-	// for i := 1; i <= len(rpc.rana.peers); i++ {
-	// 	arg.Signature[i] = false
-	// }
-	//
-	// arg.Signature[args.Initiator] = true
 	rpc.rana.waveChan <- args
 	return nil
 }
 
-// broadcastAppendEntries will send AppendEntry to all peers
+// broadcastWave will send Wave to all peers
 func (rana *Rana) broadcastWave() {
 
-	signAux := make([]bool, len(rana.peers) + 1)
+	var signAux [5]bool
 	for i := 1; i <= len(rana.peers); i++ {
 		signAux[i] = false
 	}
@@ -52,7 +46,7 @@ func (rana *Rana) broadcastWave() {
 	}
 }
 
-// sendAppendEntry will send AppendEntry to a peer
+// sendWave will send Wave to a specific peer
 func (rana *Rana) sendWave(peerIndex int, args *WaveArgs) bool {
 	reply := &WaveArgs{}
 	err := rana.CallHost(peerIndex, "Wave", args, reply)

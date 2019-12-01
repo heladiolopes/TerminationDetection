@@ -1,7 +1,6 @@
 package rana
 
 const (
-	// @todo: definir timeouts para envio da wave
 	waveTimeoutMilli int = 500
 
 	minActiveTimeoutMilli int = 500
