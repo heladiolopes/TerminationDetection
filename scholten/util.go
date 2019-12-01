@@ -8,7 +8,7 @@ import (
 // BroadcastInterval << ElectionTimeout << MTBF
 // MTBF = Mean Time Between Failures
 
-func (rana *Rana) terminationTimeout() time.Duration {
+func (scholten *Scholten) terminationTimeout() time.Duration {
 	timeout := minActiveTimeoutMilli + rand.Intn(maxActiveTimeoutMilli-minActiveTimeoutMilli)
 	return time.Duration(timeout) * time.Millisecond
 }
@@ -18,6 +18,6 @@ func (rana *Rana) terminationTimeout() time.Duration {
 // 	return time.Duration(timeout) * time.Millisecond
 // }
 
-func (rana *Rana) resetTerminationTimeout() {
-    rana.terminationTick = time.NewTimer(rana.terminationTimeout()).c
+func (scholten *Scholten) resetTerminationTimeout() {
+    scholten.terminationTick = time.NewTimer(scholten.terminationTimeout()).c
 }
