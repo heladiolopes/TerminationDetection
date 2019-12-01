@@ -33,6 +33,7 @@ type Rana struct {
     waveChan    chan *WaveArgs
     basicChan   chan *BasicArgs
     ackChan     chan *AckArgs
+	termChan	chan *TerminationArgs
 }
 
 // NewRana create a new rana object and return a pointer to it.
@@ -58,6 +59,7 @@ func NewRana(peers map[int]string, me int, activeStart bool) *Rana {
 		waveChan: make(chan *WaveArgs, 10*len(peers)),
 		basicChan: make(chan *BasicArgs, 10*len(peers)),
 		ackChan: make(chan *AckArgs, 10*len(peers)),
+		termChan: make(chan *TerminationArgs, 10*len(peers)),
 	}
 
 	rana.serv, err = newServer(rana, peers[me])
@@ -125,12 +127,11 @@ func (rana *Rana) activeSelect() {
 			}
 		case wave := <-rana.waveChan:
 			// ALUNO
+			log.Printf("[ACTIVE] Descarting wave from %v.", wave.Initiator)
 			if rana.logicalClock < wave.Clock {
+				log.Printf("[ACTIVE] Updating clock from %v to %v.", rana.logicalClock, wave.Clock)
 				rana.logicalClock = wave.Clock
-				log.Printf("[ACTIVE] Updating clock to %v", rana.logicalClock)
 			}
-
-			log.Println("[ACTIVE] Descarting wave from", wave.Initiator)
 		case basic := <-rana.basicChan:
 			// ALUNO
 
@@ -141,16 +142,15 @@ func (rana *Rana) activeSelect() {
 
 			rana.sendAck(basic.Sender, args)
 
-			log.Println("[ACTIVE] Reseting active state")
+			log.Printf("[ACTIVE] Reseting active state.")
 			break
-
 		case ack := <-rana.ackChan:
 			// ALUNO
 			rana.ackToWait--
 			if rana.logicalClock < ack.Clock + 1 {
 				rana.logicalClock = ack.Clock + 1
 			}
-			log.Println("[ACTIVE] Receiving ack from", ack.Sender)
+			log.Printf("[ACTIVE] Receiving ack from %v.", ack.Sender)
 		}
 	}
 }
@@ -161,13 +161,11 @@ func (rana *Rana) passiveSelect() {
 		select {
 		case wave := <-rana.waveChan:
 			// ALUNO
-
-			if rana.logicalClock < wave.Clock {
-				rana.logicalClock = wave.Clock
-				log.Printf("[PASSIVE] Updating clock to %v", rana.logicalClock)
-			}
-
 			log.Println("[PASSIVE] Descarting wave from", wave.Initiator)
+			if rana.logicalClock < wave.Clock {
+				log.Printf("[PASSIVE] Updating clock from %v to %v", rana.logicalClock, wave.Clock)
+				rana.logicalClock = wave.Clock
+			}
 		case basic := <-rana.basicChan:
 			// ALUNO
 			log.Println("[PASSIVE] Receving basic, activating again.")
@@ -181,7 +179,6 @@ func (rana *Rana) passiveSelect() {
 
 			rana.currentState.Set(active)
 			break
-
 		case ack := <-rana.ackChan:
 			// ALUNO
 			rana.ackToWait--
@@ -190,6 +187,7 @@ func (rana *Rana) passiveSelect() {
 			}
 			log.Println("[PASSIVE] Receiving ack from", ack.Sender)
 			if rana.ackToWait == 0 {
+				log.Println("[PASSIVE] Changing to quiet.")
 				rana.currentState.Set(quiet)
 				rana.broadcastWave()
 				break
@@ -205,11 +203,9 @@ func (rana *Rana) quietSelect() {
 		select {
 		case wave := <-rana.waveChan:
 			// ALUNO
-			log.Println(wave)
-			// os.Exit(3)
 
 			if wave.Clock < rana.logicalClock {
-				log.Println("[QUIET] Rejecting wave from", wave.Initiator, "because clock smaller them mine.")
+				log.Printf("[QUIET] Rejecting wave from %v. WaveClock: %v < MyClock: %v", wave.Initiator, wave.Clock, rana.logicalClock)
 			} else {
 				rana.logicalClock = wave.Clock
 				sign := wave.Signature[rana.me]
@@ -223,13 +219,21 @@ func (rana *Rana) quietSelect() {
 							}
 						}
 						if everybody {
-							log.Println("[QUIET] Termination deteced.")
-							os.Exit(0)
-							// avisar aos outros processos
+							// log.Println("[QUIET] Termination deteced by me.")
+							rana.broadcastTermination()
+							// os.Exit(0)
 						}
 					}
 				} else {
-					log.Printf("[QUIET] Acepting wave from %v.", wave.Initiator)
+
+					signedBy := make([]int, 0)
+					for peerIndex := range rana.peers {
+						if wave.Signature[peerIndex] {
+							signedBy = append(signedBy, peerIndex)
+						}
+					}
+
+					log.Printf("[QUIET] Acepting wave '%v' from %v.", signedBy, wave.Initiator)
 					wave.Signature[rana.me] = true
 
 					for peerIndex := range rana.peers {
@@ -242,7 +246,6 @@ func (rana *Rana) quietSelect() {
 
 				}
 			}
-
 		case basic := <-rana.basicChan:
 			// ALUNO
 			log.Printf("[QUIET] Receving basic from %v, activating again.", basic.Sender)
@@ -256,7 +259,9 @@ func (rana *Rana) quietSelect() {
 
 			rana.currentState.Set(active)
 			return
-
+		case termination := <-rana.termChan:
+			log.Printf("[QUIET] Termination deteced by %v.", termination.Initiator)
+			os.Exit(0)
 		}
 	}
 }
