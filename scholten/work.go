@@ -1,12 +1,14 @@
 package scholten
 
 import (
-  "log",
-  "math/rand",
+  "log"
+  "math/rand"
   "time"
 )
 
 func (scholten *Scholten) doWork(){
+  scholten.currentState.Set(active)
+
   scholten.works += 1
   sleepTime = rand.Intn(maxSleepTime - minSleepTime) + minSleepTime
   log.Println("[ACTIVE] Going to work for ", sleepTime, "milliseconds")
@@ -35,18 +37,4 @@ func (scholten *Scholten) doWork(){
       scholten.leaveTree()
     }
   }
-}
-
-
-
-// sendRequestVote will send RequestVote to a peer
-func (scholten *Scholten) sendBasic(peerIndex int) bool {
-	args := &BasicArgs{
-		Sender: scholten.me
-	}
-	err := scholten.CallHost(peerIndex, "Basic", args)
-	if err != nil {
-		return false
-	}
-	return true
 }
