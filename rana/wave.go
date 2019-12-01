@@ -15,8 +15,8 @@ type WaveArgs struct {
 
 // AppendEntry is called by other instances of Rana. It'll write the args received
 // in the appendEntryChan.
-func (rpc *RPC) Wave(args *WaveArgs) error {
-    args.Signature = make(bool, len(rpc.rana.peers) + 1)
+func (rpc *RPC) Wave(args *WaveArgs, reply *WaveArgs) error {
+    args.Signature = make([]bool, len(rpc.rana.peers) + 1)
 
 	// for i := 1; i <= len(rpc.rana.peers); i++ {
 	// 	arg.Signature[i] = false
@@ -30,8 +30,8 @@ func (rpc *RPC) Wave(args *WaveArgs) error {
 // broadcastAppendEntries will send AppendEntry to all peers
 func (rana *Rana) broadcastWave() {
 
-	signAux := make(bool, len(rpc.rana.peers) + 1)
-	for i := 1; i <= len(rpc.rana.peers); i++ {
+	signAux := make([]bool, len(rana.peers) + 1)
+	for i := 1; i <= len(rana.peers); i++ {
 		signAux[i] = false
 	}
 	signAux[rana.me] = true
@@ -40,13 +40,13 @@ func (rana *Rana) broadcastWave() {
 		Clock:		rana.logicalClock,
 		Initiator:	rana.me,
 
-		Signature: signAux
+		Signature: signAux,
 	}
 
 	for peerIndex := range rana.peers {
 		if peerIndex != rana.me {
 			go func(peer int) {
-				rana.sendWave(peer, wave)
+				rana.sendWave(peer, args)
 			}(peerIndex)
 		}
 	}
@@ -54,7 +54,8 @@ func (rana *Rana) broadcastWave() {
 
 // sendAppendEntry will send AppendEntry to a peer
 func (rana *Rana) sendWave(peerIndex int, args *WaveArgs) bool {
-	err := rana.CallHost(peerIndex, "Wave", args)
+	reply := &WaveArgs{}
+	err := rana.CallHost(peerIndex, "Wave", args, reply)
 	if err != nil {
 		return false
 	}

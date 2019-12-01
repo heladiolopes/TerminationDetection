@@ -8,7 +8,7 @@ type RPC struct {
 }
 
 // CallHost will communicate to another host through it's RPC public API.
-func (rana *Rana) CallHost(index int, method string, args interface{}) error {
+func (rana *Rana) CallHost(index int, method string, args interface{}, reply interface{}) error {
 	var (
 		err    error
 		client *rpc.Client
@@ -21,7 +21,7 @@ func (rana *Rana) CallHost(index int, method string, args interface{}) error {
 
 	defer client.Close()
 
-	err = client.Call("RPC."+method, args, nil)
+	err = client.Call("RPC."+method, args, reply)
 
 	if err != nil {
 		return err

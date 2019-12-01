@@ -12,9 +12,10 @@ type BasicArgs struct {
 
 }
 
+
 // RequestVote is called by other instances of Rana. It'll write the args received
 // in the requestVoteChan.
-func (rpc *RPC) Basic(args *BasicArgs) error {
+func (rpc *RPC) Basic(args *BasicArgs,  reply *BasicArgs) error {
 	rpc.rana.basicChan <- args
 	return nil
 }
@@ -32,7 +33,7 @@ func (rana *Rana) broadcastBasic() {
 				decision := rand.Float64()
 				if decision < 0.4 {
 					go func(peer int) {
-						rana.sendBasic(peer, wave)
+						rana.sendBasic(peer, args)
 					}(peerIndex)
 				}
 			}
@@ -42,7 +43,8 @@ func (rana *Rana) broadcastBasic() {
 
 // sendRequestVote will send RequestVote to a peer
 func (rana *Rana) sendBasic(peerIndex int, args *BasicArgs) bool {
-	err := rana.CallHost(peerIndex, "Basic", args)
+	reply := &BasicArgs{}
+	err := rana.CallHost(peerIndex, "Basic", args, reply)
 	if err != nil {
 		return false
 	}

@@ -9,14 +9,15 @@ type AckArgs struct {
 
 // RequestVote is called by other instances of Raft. It'll write the args received
 // in the requestVoteChan.
-func (rpc *RPC) Ack(args *AckArgs) error {
+func (rpc *RPC) Ack(args *AckArgs, reply *AckArgs) error {
 	rpc.rana.ackChan <- args
 	return nil
 }
 
 // sendRequestVote will send RequestVote to a peer
 func (rana *Rana) sendAck(peerIndex int, args *AckArgs) bool {
-	err := rana.CallHost(peerIndex, "Ack", args)
+	reply := &AckArgs{}
+	err := rana.CallHost(peerIndex, "Ack", args, reply)
 	if err != nil {
 		return false
 	}
