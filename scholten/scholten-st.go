@@ -4,7 +4,7 @@ import (
 	"TerminationDetection/util"
 	"errors"
 	"sync"
-	"log"
+//	"log"
 )
 
 // Scholten is the struct that hold all information that is used by this instance
@@ -18,12 +18,8 @@ type Scholten struct {
 	peers map[int]string
 	me    int
 
-	ccp      int
-	children []int
-	dad      int
-	root     bool
+	// TREE ATTRIBUTES
 
-	works 	 int
 	// Persistent state on all servers:
 	currentState *util.ProtectedString
 
@@ -48,12 +44,7 @@ func NewScholten(peers map[int]string, me int, isroot bool) *Scholten {
 		peers: peers,
 		me:    me,
 
-		ccp:      0,
-		children: make([]int, 10),
-		dad:      -1,
-		root:     isroot,
-
-		works: 		0,
+		// TREE ATTRIBUTES DECLARATION
 
 		currentState: util.NewProtectedString(),
 
@@ -98,26 +89,12 @@ func (scholten *Scholten) loop() {
 		select {
 		case basic := <-scholten.basicChan:
 			// ALUNO
-			if scholten.root || scholten.dad != -1 {
-				scholten.sendControl(basic.Sender)
-			} else {
-				scholten.dad = basic.Sender
-			}
-
-			go scholten.doWork()
 
 		case control := <-scholten.controlChan:
 			// ALUNO
-			scholten.removeChild(control.Sender)
-
-			if scholten.ccp == 0 && scholten.currentState.Get() == passive {
-				scholten.leaveTree()
-			}
 
 		case termination := <- scholten.terminationChan:
 			// ALUNO
-			log.Println("Received termination message from", termination.Sender,"!")
-			os.exit()
 		}
 	}
 }
