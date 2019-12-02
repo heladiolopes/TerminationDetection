@@ -4,6 +4,12 @@ import (
   "log"
 )
 
+func (scholten *Scholten) addChild(child int){
+  log.Println("Adding child", child)
+  scholten.children = append(scholten.children, child)
+  scholten.ccp += 1
+}
+
 func (scholten *Scholten) removeChild(child int, i int) {
 	log.Println("Removing child ", child)
 	copy(scholten.children[i:], scholten.children[i+1:])
@@ -16,7 +22,8 @@ func (scholten *Scholten) leaveTree(){
     if scholten.root {
   		log.Println("[PASSIVE] Termination detected!")
   		log.Println("[PASSIVE] Sending termination messages to all processes.")
-  		scholten.broadcastFinish()
+  		scholten.broadcastTermination()
+      scholten.done <- 0
   	} else {
   		log.Println("[PASSIVE] Tree leaving condition met!")
   		log.Println("[PASSIVE] Sending control message to my father.")
